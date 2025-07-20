@@ -14,72 +14,73 @@ export default function SnakeGame({ onComplete }) {
   const [goalReached, setGoalReached] = useState(false);
   const [isEating, setIsEating] = useState(false);
 
-  // Movement and bait logic
+  // Main movement loop with cleanup
   useEffect(() => {
-    if (!goalReached) {
-      const interval = setInterval(() => {
-        setDotPosition((prev) => {
-          let { row, col } = prev;
-          if (direction === "left") col = (col - 1 + GRID_SIZE) % GRID_SIZE;
-          else if (direction === "right") col = (col + 1) % GRID_SIZE;
-          else if (direction === "up") row = (row - 1 + GRID_SIZE) % GRID_SIZE;
-          else if (direction === "down") row = (row + 1) % GRID_SIZE;
+    if (goalReached) return;
 
-          const newPosition = { row, col };
+    const interval = setInterval(() => {
+      setDotPosition((prev) => {
+        let { row, col } = prev;
+        if (direction === "left") col = (col - 1 + GRID_SIZE) % GRID_SIZE;
+        else if (direction === "right") col = (col + 1) % GRID_SIZE;
+        else if (direction === "up") row = (row - 1 + GRID_SIZE) % GRID_SIZE;
+        else if (direction === "down") row = (row + 1) % GRID_SIZE;
 
-          // Eating bait
-          if (
-            newPosition.row === baitPosition.row &&
-            newPosition.col === baitPosition.col
-          ) {
-            setIsEating(true);
-            setTimeout(() => setIsEating(false), 400);
+        const newPosition = { row, col };
 
-            const getNewBait = () => {
-              let r, c;
-              do {
-                r = Math.floor(Math.random() * GRID_SIZE);
-                c = Math.floor(Math.random() * GRID_SIZE);
-              } while (
-                (r === newPosition.row && c === newPosition.col) ||
-                tail.some((seg) => seg.row === r && seg.col === c)
-              );
-              return { row: r, col: c };
-            };
-            setBaitPosition(getNewBait());
-            setTail((prevTail) => [...prevTail, { ...prev }]);
+        // Check bait collision
+        if (
+          newPosition.row === baitPosition.row &&
+          newPosition.col === baitPosition.col
+        ) {
+          setIsEating(true);
+          setTimeout(() => setIsEating(false), 400);
+
+          const getNewBait = () => {
+            let r, c;
+            do {
+              r = Math.floor(Math.random() * GRID_SIZE);
+              c = Math.floor(Math.random() * GRID_SIZE);
+            } while (
+              (r === newPosition.row && c === newPosition.col) ||
+              tail.some((seg) => seg.row === r && seg.col === c)
+            );
+            return { row: r, col: c };
+          };
+          setBaitPosition(getNewBait());
+          setTail((prevTail) => [...prevTail, { ...prev }]);
+        }
+
+        // Tail movement
+        setTail((prevTail) => {
+          const newTail = [...prevTail];
+          for (let i = newTail.length - 1; i > 0; i--) {
+            newTail[i] = { ...newTail[i - 1] };
+          }
+          if (newTail.length > 0) newTail[0] = { ...prev };
+
+          if (!goalReached && newTail.length >= 5) {
+            setGoalReached(true);
           }
 
-          // Move tail and check for goal
-          setTail((prevTail) => {
-            const newTail = [...prevTail];
-            for (let i = newTail.length - 1; i > 0; i--) {
-              newTail[i] = { ...newTail[i - 1] };
-            }
-            if (newTail.length > 0) newTail[0] = { ...prev };
-
-            if (!goalReached && newTail.length >= 5) {
-              setGoalReached(true); // ✅ Only set state here
-            }
-
-            return newTail;
-          });
-
-          return newPosition;
+          return newTail;
         });
-      }, 400);
-      return () => clearInterval(interval);
-    }
-  }, [direction, baitPosition, tail, goalReached]);
 
-  // ✅ Trigger parent callback AFTER state updates
+        return newPosition;
+      });
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [direction, goalReached]); // Only depends on direction and goalReached
+
+  // Notify parent when complete
   useEffect(() => {
     if (goalReached && onComplete) {
       onComplete();
     }
   }, [goalReached, onComplete]);
 
-  // Render grid
+  // Grid renderer
   const renderGrid = () => (
     <div className="grid grid-cols-6 mt-8 w-fit z-10">
       {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
@@ -127,7 +128,7 @@ export default function SnakeGame({ onComplete }) {
     </div>
   );
 
-  // Controls
+  // Arrow controls
   const renderArrowControls = () => (
     <div className="mt-6 flex flex-col items-center space-y-2 z-10">
       <button

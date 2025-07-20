@@ -41,9 +41,11 @@ export default function WelcomePage() {
     }
   };
 
+  // The button is now disabled during the quiz, snake game, AND shoot phase.
   const isContinueDisabled =
     (phase === "quiz" && !isQuizCompleted) ||
-    (phase === "game" && !snakeCompleted);
+    (phase === "game" && !snakeCompleted) ||
+    phase === "shoot"; // <-- This is the key change
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -51,39 +53,38 @@ export default function WelcomePage() {
       <img
         src="/bg.gif"
         alt="Background"
-        className="absolute inset-0 w-full h-full object-cover z-1 opacity-30"
+        className="absolute inset-0 w-full h-full object-cover z-10 opacity-30"
       />
 
-      <div className="relative z-10 bg-transparent min-h-screen flex flex-col items-center justify-center px-4 space-y-6">
+      <div className="relative z-20 bg-transparent min-h-screen flex flex-col items-center justify-center px-4 space-y-6">
         {renderPhase()}
 
-        {phase !== "shoot" && (
-          <button
-            onClick={handleContinue}
-            disabled={isContinueDisabled}
-            className={`mt-6 px-6 py-2 rounded-full text-lg font-medium flex items-center gap-2 transition border-2 ${
-              isContinueDisabled
-                ? "border-white text-white opacity-50 cursor-not-allowed"
-                : "border-white text-white hover:bg-white hover:text-pink-500"
-            }`}
+        {/* The condition that removed the button is now gone */}
+        <button
+          onClick={handleContinue}
+          disabled={isContinueDisabled}
+          className={`z-[200] mt-56 px-6 py-2 rounded-full text-lg font-medium flex items-center gap-2 transition border-2 ${
+            isContinueDisabled
+              ? "border-white text-white opacity-50 cursor-not-allowed"
+              : "border-white text-white hover:bg-white hover:text-pink-500"
+          }`}
+        >
+          Continue
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            Continue
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        )}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );
