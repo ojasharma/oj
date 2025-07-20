@@ -6,22 +6,26 @@ import React, { useState, useEffect, useRef } from "react";
 let projectileId = 0;
 let baitId = 0;
 
-export default function ShootGame() {
+export default function ShootGame({ onGameComplete }) {
+  // Accept onGameComplete as a prop
   const [projectiles, setProjectiles] = useState([]);
   const [baits, setBaits] = useState([]);
   const [score, setScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false); // ✅ Track if game is over
+  const [gameOver, setGameOver] = useState(false);
   const headRef = useRef(null);
 
-  // Stop game when score reaches 20
+  // Stop game when score reaches 20 and notify the parent component
   useEffect(() => {
     if (score >= 20) {
       setGameOver(true);
+      if (onGameComplete) {
+        onGameComplete(); // Notify the parent component that the game is over
+      }
     }
-  }, [score]);
+  }, [score, onGameComplete]);
 
   const handleClick = (event) => {
-    if (gameOver) return; // ✅ Prevent shooting after game ends
+    if (gameOver) return;
     if (projectiles.length > 0) return;
     if (!headRef.current) return;
 
@@ -193,4 +197,3 @@ export default function ShootGame() {
     </div>
   );
 }
-
